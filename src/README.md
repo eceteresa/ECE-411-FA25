@@ -1,0 +1,1 @@
+This directory can house main programming scripts, headers, user-made libraries (or downloaded ones). Please make sure to add comment sections describing what all the code does so someone from outside of our group can follow!
