@@ -18,6 +18,8 @@ Here are the basic programs you'll need to have on your computer in order to int
 
 [Github markdown text cheat sheet](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 
+[What are Git branches and why are they important](https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell)
+
 ### Github Task Tracker
 
 [Git Project Tracker Tutorial](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/quickstart-for-projects)
