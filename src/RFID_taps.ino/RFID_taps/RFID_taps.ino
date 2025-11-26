@@ -1,85 +1,75 @@
 #include <SPI.h>
-#include <MFRC522.h>
+#include <MFRC522v2.h>
 #include <MFRC522DriverSPI.h>
-#include <MFRC522Debug.h>
 #include <MFRC522DriverPinSimple.h>
 
 #define SS_PIN 10
-#define LOCK_PIN 4 // Pin for the lock/LED, Using NeoPixel LED
+#define LOCK_PIN 4
 
-MFRC522 mfrc522(SS_PIN);
+// Use the correct CS pin class for your library:
+MFRC522DriverPinSimple csPin(SS_PIN);
 
-// Store the UID of the tag to be used
-byte masterTagUID[] = {0xB1, 0x3F, 0x6B, 0xA2}; // Replace with your tag's UID
+// Create SPI driver with required SPISettings:
+MFRC522DriverSPI driver(csPin, SPI, SPISettings(1000000, MSBFIRST, SPI_MODE0));
 
-bool isLocked = true; // Initial state: Locked
-unsigned long lastTapTime = 0;
-int tapCount = 0;
-const unsigned long tapInterval = 2000; // 1 second interval for multiple taps
-const int tapsRequired = 2; // Number of taps to toggle lock state
+// Create MFRC522 object using the driver:
+MFRC522 mfrc522(driver);
+
+// Known UID (replace with yours)
+byte masterTagUID[] = {0xB1, 0x3F, 0x6B, 0xA2};
+
+bool isLocked = true;
+
+
+// Compare UID helper
+bool compareUID(byte* uid1, byte* uid2, byte size) {
+    for (byte i = 0; i < size; i++) {
+        if (uid1[i] != uid2[i]) return false;
+    }
+    return true;
+}
+
 
 void setup() {
     Serial.begin(115200);
     SPI.begin();
-    mfrc522.PCD_Init();
+
     pinMode(LOCK_PIN, OUTPUT);
-    digitalWrite(LOCK_PIN, HIGH); // Lock initially (assuming HIGH locks)
-    Serial.println("Place your card on reader...");
+    digitalWrite(LOCK_PIN, HIGH); // locked initially
+
+    Serial.println("Initializing MFRC522...");
+    mfrc522.PCD_Init();
+
+    Serial.println("Ready – scan a card.");
 }
+
 
 void loop() {
-    // Check for new cards
-    if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-        
-        // Check if the detected tag is the master tag
-        if (compareUID(mfrc522.uid.uidByte, masterTagUID)) {
-            unsigned long currentTime = millis();
 
-            // Check if taps are within the interval
-            if (currentTime - lastTapTime < tapInterval) {
-                tapCount++;
-            } else {
-                tapCount = 1; // Reset count if too much time passed
-            }
+    if (!mfrc522.PICC_IsNewCardPresent()) return;
+    if (!mfrc522.PICC_ReadCardSerial()) return;
 
-            lastTapTime = currentTime;
+    byte uidSize = mfrc522.uid.size;
+    byte* uid = mfrc522.uid.uidByte;
 
-            // Check if required taps reached
-            if (tapCount == tapsRequired) {
-                tapCount = 0; // Reset count
-                toggleLockState();
-            }
-        }
-
-        // Halt PICC (tag)
-        mfrc522.PICC_HaltA();
-        // Stop encryption on PCD (reader)
-        mfrc522.PCD_StopCrypto1();
+    Serial.print("Scanned UID: ");
+    for (byte i = 0; i < uidSize; i++) {
+        if (uid[i] < 0x10) Serial.print("0");
+        Serial.print(uid[i], HEX);
+        Serial.print(" ");
     }
-}
+    Serial.println();
 
-void toggleLockState() {
-    isLocked = !isLocked; // Toggle the state
-    if (isLocked) {
-        digitalWrite(LOCK_PIN, HIGH); // Lock
-        Serial.println("System Locked");
-    } else {
-        digitalWrite(LOCK_PIN, LOW); // Unlock
-        Serial.println("System Unlocked for 5 seconds");
-        // Optional: automatically re-lock after a delay
-        delay(5000); 
-        isLocked = true;
+    if (compareUID(uid, masterTagUID, uidSize)) {
+        Serial.println("Your card is detected – unlocking...");
+        digitalWrite(LOCK_PIN, LOW);
+        delay(3000);
         digitalWrite(LOCK_PIN, HIGH);
-        Serial.println("System Re-locked automatically");
+        Serial.println("Locked again.");
+    } else {
+        Serial.println("Who is this? Denied!! Stranger Danger!!!.");
     }
-}
 
-// Helper function to compare two UIDs
-bool compareUID(byte* uid1, byte* uid2) {
-    for (byte i = 0; i < mfrc522.uid.size; i++) {
-        if (uid1[i] != uid2[i]) {
-            return false;
-        }
-    }
-    return true;
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
 }
