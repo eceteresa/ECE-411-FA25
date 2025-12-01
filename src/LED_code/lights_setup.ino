@@ -16,15 +16,19 @@ void loop() {
   // --- Solid Color Example (Green) ---
   // Set all pixels to a specific color (R, G, B values from 0-255)
   for(int i=0; i<NUM_LEDS; i++) {
-    front_strip.setPixelColor(i, front_strip.Color(150, 0, 0)); // red
+    front_strip.setPixelColor(i, front_strip.Color(255, 255, 255)); // white for headlights
+    back_strip.setPixelColor(i, back_strip.Color(150, 0, 0)); // red for taillights
+
   }
   front_strip.show(); // Update the strip to show the color
+  back_strip.show(); //update the tail light to show color
   delay(1000);   // Wait for 1 second
 
   // --- Rainbow Cycle Example ---
-  rainbowCycle(20); // Run a rainbow cycle effect with a 20ms delay per step
+  //rainbowCycle(20); // Run a rainbow cycle effect with a 20ms delay per step
 }
 
+/*
 // Function to create a rainbow effect
 void rainbowCycle(uint8_t wait) {
   for(uint16_t j=0; j < 256*5; j++) { // 5 cycles of all colors on wheel
@@ -50,3 +54,5 @@ uint32_t Wheel(byte WheelPos) {
   WheelPos -= 170;
   return back_strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
+
+*/
