@@ -4,7 +4,7 @@
 #include <MFRC522DriverPinSimple.h>
 #include <Adafruit_NeoPixel.h>
 
-#define SS_PIN       10
+#define RIFD_SS_PIN  10
 #define LOCK_PIN     4
 #define NEOPIXEL_PIN 5
 #define NUMPIXELS    5
@@ -12,7 +12,7 @@
 Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 // RFID driver (driver-based API)
-MFRC522DriverPinSimple csPin(SS_PIN);
+MFRC522DriverPinSimple csPin(RFID_SS_PIN);
 MFRC522DriverSPI driver(csPin, SPI, SPISettings(1000000, MSBFIRST, SPI_MODE0));
 MFRC522 mfrc522(driver);
 
@@ -35,7 +35,7 @@ const unsigned long doubleTapWindow = 3000UL; // 3 seconds
 // Flash/blink helper for the "arm window expired" purple blink
 bool flashActive = false;
 unsigned long flashStart = 0;
-const unsigned long flashDuration = 1000UL; // 1 second
+const unsigned long flashDuration = 1000UL; // 1 second, UL = Unsigned Long
 
 // Helper: set LEDs for a mode
 void setModeLEDs(byte m) {
