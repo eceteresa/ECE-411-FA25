@@ -30,7 +30,7 @@ byte mode = 0;
 // timing variables
 unsigned long lastTapTime = 0;        // when the first tap happened (mode 1)
 unsigned long armWindowStart = 0;     // when DISARMED window started (mode 2)
-const unsigned long doubleTapWindow = 3000UL; // 3 seconds
+const unsigned long doubleTapWindow = 3000UL; // 3 seconds, UL = Unsigned Long
 
 // Flash/blink helper for the "arm window expired" purple blink
 bool flashActive = false;
