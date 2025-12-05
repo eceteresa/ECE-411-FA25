@@ -1,15 +1,21 @@
+// NOTE: Add coding logic to GPIO 5 & 6 so that they can be set to off when switch is
+//       off, aka A3 is LOW. This is to ensure that both NeoPixel strips are off
+//       when the system is not powered.
+
 #include <SPI.h>
 #include <MFRC522v2.h>
 #include <MFRC522DriverSPI.h>
 #include <MFRC522DriverPinSimple.h>
 #include <Adafruit_NeoPixel.h>
 
-#define RIFD_SS_PIN  10
+#define RFID_SS_PIN  10
 #define LOCK_PIN     4
-#define NEOPIXEL_PIN 5
-#define NUMPIXELS    5
+#define NEOPIXEL_PIN 6
+#define NEOPIXEL_PIN2 5
+#define NUMPIXELS    10
 
 Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels2(NUMPIXELS, NEOPIXEL_PIN2, NEO_GRB + NEO_KHZ800);
 
 // RFID driver (driver-based API)
 MFRC522DriverPinSimple csPin(RFID_SS_PIN);
@@ -39,21 +45,42 @@ const unsigned long flashDuration = 1000UL; // 1 second, UL = Unsigned Long
 
 // Helper: set LEDs for a mode
 void setModeLEDs(byte m) {
-  pixels.clear();
+  // apply the same LED state to both NeoPixel strips
+  auto clearAll = [&]() {
+    pixels.clear();
+    pixels2.clear();
+  };
+  auto showAll = [&]() {
+    pixels.show();
+    pixels2.show();
+  };
+  auto setAllPixel = [&](int idx, uint32_t color) {
+    pixels.setPixelColor(idx, color);
+    pixels2.setPixelColor(idx, color);
+  };
+  auto setAllPixelsColorRGB = [&](uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t c = pixels.Color(r, g, b);
+    for (int i = 0; i < NUMPIXELS; i++) {
+      pixels.setPixelColor(i, c);
+      pixels2.setPixelColor(i, c);
+    }
+  };
+
+  clearAll();
   switch (m) {
     case 0: // idle => all off
       break;
     case 1: // waiting for second tap => LED0 green
-      pixels.setPixelColor(0, pixels.Color(0, 150, 0));
+      setAllPixel(0, pixels.Color(0, 150, 0));
       break;
     case 2: // DISARMED => all purple
-      for (int i = 0; i < NUMPIXELS; i++) pixels.setPixelColor(i, pixels.Color(150, 0, 150));
+      setAllPixelsColorRGB(150, 0, 150);
       break;
     case 3: // ARMED => all red
-      for (int i = 0; i < NUMPIXELS; i++) pixels.setPixelColor(i, pixels.Color(150, 0, 0));
+      setAllPixelsColorRGB(150, 0, 0);
       break;
   }
-  pixels.show();
+  showAll();
 }
 
 // Simple UID comparison
@@ -64,6 +91,7 @@ bool compareUID(const byte *a, const byte *b, byte length) {
   return true;
 }
 
+// TODO: Determin if you need this function or not
 void lockInit() {
   pinMode(LOCK_PIN, OUTPUT);
   digitalWrite(LOCK_PIN, HIGH); // locked initially (if used)
@@ -83,6 +111,12 @@ void setup() {
   pixels.setBrightness(50);
   pixels.clear();
   pixels.show();
+
+  // Second NeoPixel strip (temporary) init
+  pixels2.begin();
+  pixels2.setBrightness(50);
+  pixels2.clear();
+  pixels2.show();
 
   Serial.println("Ready - scan a card.");
 }
@@ -109,7 +143,9 @@ void loop() {
       armWindowStart = 0; // clear the arm window
       // trigger a 1s blink: we'll turn LEDs off briefly then show purple for flashDuration
       pixels.clear();
+      pixels2.clear();
       pixels.show();
+      pixels2.show();
       flashActive = true;
       flashStart = now; // flash will show purple for flashDuration then restore persistent purple
       // note: we do NOT change mode (remain mode==2)
@@ -121,9 +157,14 @@ void loop() {
     if ((now - flashStart) < 50) {
       // small off period already shown (we cleared above), do nothing
     } else if ((now - flashStart) < flashDuration) {
-      // show purple flash during this window
-      for (int i = 0; i < NUMPIXELS; i++) pixels.setPixelColor(i, pixels.Color(150, 0, 150));
+      // show purple flash during this window on both strips
+      for (int i = 0; i < NUMPIXELS; i++) {
+        uint32_t c = pixels.Color(150, 0, 150);
+        pixels.setPixelColor(i, c);
+        pixels2.setPixelColor(i, c);
+      }
       pixels.show();
+      pixels2.show();
     } else {
       // flash finished — restore persistent DISARMED purple
       flashActive = false;
@@ -199,11 +240,16 @@ void loop() {
     Serial.println("Access denied - unknown badge.");
     // Denied feedback: red on LED0 for 1s (blocking). If you want non-blocking, we can change this.
     pixels.clear();
+    pixels2.clear();
     pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+    pixels2.setPixelColor(0, pixels.Color(255, 0, 0));
     pixels.show();
+    pixels2.show();
     delay(1000);
     pixels.clear();
+    pixels2.clear();
     pixels.show();
+    pixels2.show();
   }
 
   mfrc522.PICC_HaltA();
