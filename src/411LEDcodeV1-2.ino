@@ -7,8 +7,9 @@
 #define LIS3DH_CS 9
 #define RFID_CS   10
 #define RFID_RST  22
-#define LED_FRONT 5
-#define LED_REAR  6
+#define LED_FRONT 5 //front bike lights
+#define LED_REAR  6 //rear bike lights
+#define NUM_LEDS 10 //Accounting for front and rear lights
 
 
 // --- SPI bus pins ---
@@ -43,9 +44,9 @@ void setup() {
   mfrc522.PCD_Init();  // initialize RFID
   Serial.println("RC522 initialized.");
 
+}
 
-
-  // Sensing direction or travel and updating boolean variable
+ /* // Sensing direction or travel and updating boolean variable
     sensors_event_t event;
   lis.getEvent(&event);
   
@@ -157,4 +158,4 @@ void loop() {
 
   } // End RFID while loop ------------------------------------
 
-} // End void loop
+} // End void loop*/
