@@ -8,7 +8,8 @@
 #define RFID_CS   10
 #define RFID_RST  22
 #define LED_FRONT 5 //front bike lights
-#define LED_REAR  6 //rear bike lights
+//#define LED_REAR  6 //rear bike lights
+#define LED_REAR 11 // breadboard REAR LED
 #define NUM_LEDS 10 //Accounting for front and rear lights
 
 

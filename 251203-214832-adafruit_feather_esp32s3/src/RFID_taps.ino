@@ -4,7 +4,7 @@
 #include <MFRC522DriverPinSimple.h>
 #include <Adafruit_NeoPixel.h>
 
-#define RIFD_SS_PIN  10
+#define RFID_SS_PIN  10
 #define LOCK_PIN     4
 #define NEOPIXEL_PIN 5
 #define NUMPIXELS    5
